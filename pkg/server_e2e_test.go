@@ -1,6 +1,7 @@
 package sepweb
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 )
@@ -30,6 +31,7 @@ func handleStar(ctx *Context) {
 }
 
 func handleParam(ctx *Context) {
+	user := ctx.PathValue("user").val
 	ctx.Resp.WriteHeader(http.StatusOK)
-	_, _ = ctx.Resp.Write([]byte("hello, user"))
+	_, _ = ctx.Resp.Write([]byte(fmt.Sprintf("hello, %s", user)))
 }

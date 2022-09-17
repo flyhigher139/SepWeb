@@ -27,13 +27,14 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *HttpServer) serve(ctx *Context) {
-	matchInfo, ok := s.findRoute(ctx.Req.Method, ctx.Req.URL.Path)
-	if !ok || matchInfo == nil {
+	mi, ok := s.findRoute(ctx.Req.Method, ctx.Req.URL.Path)
+	if !ok || mi == nil {
 		ctx.Resp.WriteHeader(http.StatusNotFound)
 		_, _ = ctx.Resp.Write([]byte("Not Found"))
 		return
 	}
-	matchInfo.n.handler(ctx)
+	ctx.PathParams = mi.pathParams
+	mi.n.handler(ctx)
 }
 
 func NewHttpServer() *HttpServer {
