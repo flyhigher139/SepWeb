@@ -1,108 +1,11 @@
-package sepweb
+package route
 
 import (
 	"fmt"
+	"github.com/igevin/sepweb/pkg/handler"
 	"regexp"
 	"strings"
 )
-
-type router struct {
-	routes map[string]*node
-}
-
-func newRouter() router {
-	return router{
-		routes: map[string]*node{},
-	}
-}
-
-func (r *router) addRoute(method, path string, handler HandlerFunc) {
-	_ = r.checkPathFormat(path)
-	root, ok := r.handleRootRouter(method, path, handler)
-	if ok {
-		return
-	}
-	r.handleSegmentRouter(root, path, handler)
-}
-
-func (r *router) checkPathFormat(path string) bool {
-	if path == "" {
-		panic("web: 路由是空字符串")
-	}
-	if path[0] != '/' {
-		panic("web: 路由必须以 / 开头")
-	}
-
-	if path != "/" && path[len(path)-1] == '/' {
-		panic("web: 路由不能以 / 结尾")
-	}
-	return true
-}
-
-func (r *router) handleRootRouter(method, path string, handler HandlerFunc) (*node, bool) {
-	root, ok := r.routes[method]
-	if !ok {
-		root = &node{path: "/"}
-		r.routes[method] = root
-	}
-	if path == "/" {
-		if root.handler != nil {
-			panic("web: 路由冲突[/]")
-		}
-		root.handler = handler
-	}
-	return root, path == "/"
-}
-
-func (r *router) handleSegmentRouter(n *node, path string, handler HandlerFunc) {
-	segs := strings.Split(path[1:], "/")
-	// 开始一段段处理
-	for _, s := range segs {
-		if s == "" {
-			panic(fmt.Sprintf("web: 非法路由。不允许使用 //a/b, /a//b 之类的路由, [%s]", path))
-		}
-		n = n.childOrCreate(s)
-	}
-	if n.handler != nil && n.path != "*" {
-		panic(fmt.Sprintf("web: 路由冲突[%s]", path))
-	}
-	n.handler = handler
-}
-
-func (r *router) findRoute(method, path string) (*matchInfo, bool) {
-	root, ok := r.routes[method]
-	if !ok {
-		return nil, false
-	}
-
-	if path == "/" {
-		return &matchInfo{n: root}, true
-	}
-
-	return r.findPathRoute(root, path)
-}
-
-func (r *router) findPathRoute(curNode *node, path string) (*matchInfo, bool) {
-	segs := strings.Split(strings.Trim(path, "/"), "/")
-	mi := &matchInfo{}
-	var prev *node
-	for _, s := range segs {
-		var matchParam, ok bool
-		prev = curNode
-		curNode, matchParam, ok = curNode.childOf(s)
-		if !ok {
-			return nil, false
-		}
-		if curNode == nil {
-			curNode = prev
-		}
-		if matchParam {
-			mi.addValue(curNode.paramName, s)
-		}
-	}
-	mi.n = curNode
-	return mi, true
-}
 
 type nodeType int
 
@@ -130,7 +33,7 @@ type node struct {
 	regChild *node
 	regExpr  *regexp.Regexp
 
-	handler HandlerFunc
+	Handler handler.Handle
 }
 
 func (n *node) childOrCreate(path string) *node {
@@ -250,7 +153,7 @@ func (n *node) childOf(path string) (*node, bool, bool) {
 			return n.paramChild, true, true
 		}
 		return n.starChild, false, true
-		//return n.starChild, false, n.starChild != nil
+		//return N.starChild, false, N.starChild != nil
 	}
 	res, ok := n.children[path]
 	if !ok {
@@ -264,16 +167,4 @@ func (n *node) childOf(path string) (*node, bool, bool) {
 		return n.starChild, false, n.starChild != nil
 	}
 	return res, false, ok
-}
-
-type matchInfo struct {
-	n          *node
-	pathParams map[string]string
-}
-
-func (m *matchInfo) addValue(key string, value string) {
-	if m.pathParams == nil {
-		m.pathParams = make(map[string]string, 1)
-	}
-	m.pathParams[key] = value
 }

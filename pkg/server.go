@@ -1,17 +1,18 @@
 package sepweb
 
-import "net/http"
-
-type HandlerFunc func(ctx *Context)
+import (
+	"github.com/igevin/sepweb/pkg/context"
+	"github.com/igevin/sepweb/pkg/route"
+	"net/http"
+)
 
 type Server interface {
 	http.Handler
 	Start(addr string) error
-	//AddRoute(method string, path string, handler HandlerFunc)
 }
 
 type HttpServer struct {
-	router
+	route.Router
 }
 
 func (s *HttpServer) Start(addr string) error {
@@ -19,24 +20,24 @@ func (s *HttpServer) Start(addr string) error {
 }
 
 func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := &Context{
+	ctx := &context.Context{
 		Req:  r,
 		Resp: w,
 	}
 	s.serve(ctx)
 }
 
-func (s *HttpServer) serve(ctx *Context) {
-	mi, ok := s.findRoute(ctx.Req.Method, ctx.Req.URL.Path)
+func (s *HttpServer) serve(ctx *context.Context) {
+	mi, ok := s.FindRoute(ctx.Req.Method, ctx.Req.URL.Path)
 	if !ok || mi == nil {
 		ctx.Resp.WriteHeader(http.StatusNotFound)
 		_, _ = ctx.Resp.Write([]byte("Not Found"))
 		return
 	}
-	ctx.PathParams = mi.pathParams
-	mi.n.handler(ctx)
+	ctx.PathParams = mi.PathParams
+	mi.N.Handler(ctx)
 }
 
 func NewHttpServer() *HttpServer {
-	return &HttpServer{router: newRouter()}
+	return &HttpServer{Router: route.NewRouter()}
 }

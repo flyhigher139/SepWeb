@@ -1,11 +1,10 @@
-package sepweb
+package context
 
 import (
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
-	"strconv"
 )
 
 type Context struct {
@@ -67,16 +66,4 @@ func (c *Context) RespJSON(code int, val any) error {
 	c.Resp.WriteHeader(code)
 	_, err = c.Resp.Write(bs)
 	return err
-}
-
-type StringValue struct {
-	val string
-	err error
-}
-
-func (s *StringValue) toInt64() (int64, error) {
-	if s.err != nil {
-		return 0, s.err
-	}
-	return strconv.ParseInt(s.val, 10, 64)
 }
