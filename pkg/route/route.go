@@ -92,7 +92,7 @@ func (r *Router) findPathRoute(curNode *node, path string) (*matchInfo, bool) {
 		var matchParam, ok bool
 		prev = curNode
 		curNode, matchParam, ok = curNode.childOf(s)
-		if !ok {
+		if !ok && prev.typ != nodeTypeAny {
 			return nil, false
 		}
 		if curNode == nil {

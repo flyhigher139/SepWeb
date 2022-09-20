@@ -148,13 +148,13 @@ func (n *node) childOf(path string) (*node, bool, bool) {
 	if n.children == nil {
 		if n.regChild != nil {
 			matched := n.regChild.regExpr.MatchString(path)
-			return n.regChild, matched, true
+			return n.regChild, matched, matched
 		}
 		if n.paramChild != nil {
 			return n.paramChild, true, true
 		}
-		return n.starChild, false, true
-		//return N.starChild, false, N.starChild != nil
+		//return n.starChild, false, true
+		return n.starChild, false, n.starChild != nil
 	}
 	res, ok := n.children[path]
 	if !ok {
