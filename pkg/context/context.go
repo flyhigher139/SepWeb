@@ -10,6 +10,9 @@ import (
 type Context struct {
 	Req              *http.Request
 	Resp             http.ResponseWriter
+	RespStatusCode   int
+	RespData         []byte
+	MatchedRoute     string
 	PathParams       map[string]string
 	cacheQueryValues url.Values
 }

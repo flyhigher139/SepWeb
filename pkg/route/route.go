@@ -50,6 +50,7 @@ func (r *Router) handleRootRouter(method, path string, handler handler.Handle) (
 			panic("web: 路由冲突[/]")
 		}
 		root.Handler = handler
+		root.Route = path
 	}
 	return root, path == "/"
 }
@@ -67,12 +68,13 @@ func (r *Router) handleSegmentRouter(n *node, path string, handler handler.Handl
 		panic(fmt.Sprintf("web: 路由冲突[%s]", path))
 	}
 	n.Handler = handler
+	n.Route = path
 }
 
 func (r *Router) FindRoute(method, path string) (*matchInfo, bool) {
 	root, ok := r.routes[method]
 	if !ok {
-		return nil, false
+		return &matchInfo{}, false
 	}
 
 	if path == "/" {

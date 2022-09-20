@@ -33,6 +33,7 @@ type node struct {
 	regChild *node
 	regExpr  *regexp.Regexp
 
+	Route   string
 	Handler handler.Handle
 }
 
