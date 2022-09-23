@@ -3,6 +3,7 @@ package sepweb
 import (
 	"fmt"
 	"github.com/igevin/sepweb/pkg/context"
+	"github.com/igevin/sepweb/pkg/template"
 	"net/http"
 	"testing"
 )
@@ -45,4 +46,23 @@ func handleParam(ctx *context.Context) {
 func defaultHandleError(ctx *context.Context) {
 	ctx.Resp.WriteHeader(http.StatusBadRequest)
 	_, _ = ctx.Resp.Write([]byte("bad request"))
+}
+
+func TestServerWithRenderEngine(t *testing.T) {
+	engine := &template.GoTemplateEngine{}
+	err := engine.LoadFromGlob("testdata/tpls/*.gohtml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := NewHttpServer(ServerWithTemplateEngine(engine))
+	s.Get("/login", func(ctx *context.Context) {
+		er := ctx.Render("login.gohtml", nil)
+		if er != nil {
+			t.Fatal(er)
+		}
+	})
+	err = s.Start(":8081")
+	if err != nil {
+		t.Fatal(err)
+	}
 }

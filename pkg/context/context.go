@@ -3,6 +3,7 @@ package context
 import (
 	"encoding/json"
 	"errors"
+	"github.com/igevin/sepweb/pkg/template"
 	"net/http"
 	"net/url"
 )
@@ -15,6 +16,7 @@ type Context struct {
 	MatchedRoute     string
 	PathParams       map[string]string
 	cacheQueryValues url.Values
+	TplEngine        template.TemplateEngine
 }
 
 func (c *Context) BindJson(val any) error {
@@ -68,5 +70,15 @@ func (c *Context) RespJSON(code int, val any) error {
 	}
 	c.Resp.WriteHeader(code)
 	_, err = c.Resp.Write(bs)
+	return err
+}
+
+func (c *Context) Render(tpl string, data any) error {
+	var err error
+	c.RespData, err = c.TplEngine.Render(c.Req.Context(), tpl, data)
+	c.RespStatusCode = http.StatusOK
+	if err != nil {
+		c.RespStatusCode = http.StatusInternalServerError
+	}
 	return err
 }

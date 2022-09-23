@@ -5,6 +5,7 @@ import (
 	"github.com/igevin/sepweb/pkg/handler"
 	"github.com/igevin/sepweb/pkg/middleware"
 	"github.com/igevin/sepweb/pkg/route"
+	"github.com/igevin/sepweb/pkg/template"
 	"log"
 	"net/http"
 )
@@ -16,8 +17,11 @@ type Server interface {
 
 type HttpServer struct {
 	route.Router
-	mdls []middleware.Middleware
+	mdls      []middleware.Middleware
+	tplEngine template.TemplateEngine
 }
+
+type ServerOption func(server *HttpServer)
 
 func (s *HttpServer) Start(addr string) error {
 	return http.ListenAndServe(addr, s)
@@ -25,8 +29,9 @@ func (s *HttpServer) Start(addr string) error {
 
 func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := &context.Context{
-		Req:  r,
-		Resp: w,
+		Req:       r,
+		Resp:      w,
+		TplEngine: s.tplEngine,
 	}
 	handle := s.serve
 	for i := len(s.mdls) - 1; i >= 0; i-- {
@@ -74,6 +79,24 @@ func (s *HttpServer) flushRespMiddleware(next handler.Handle) handler.Handle {
 	}
 }
 
-func NewHttpServer() *HttpServer {
-	return &HttpServer{Router: route.NewRouter()}
+func (s *HttpServer) Get(path string, handle handler.Handle) {
+	s.AddRoute(http.MethodGet, path, handle)
+}
+
+func (s *HttpServer) Post(path string, handle handler.Handle) {
+	s.AddRoute(http.MethodPost, path, handle)
+}
+
+func NewHttpServer(opts ...ServerOption) *HttpServer {
+	s := &HttpServer{Router: route.NewRouter()}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
+}
+
+func ServerWithTemplateEngine(engine template.TemplateEngine) ServerOption {
+	return func(server *HttpServer) {
+		server.tplEngine = engine
+	}
 }
