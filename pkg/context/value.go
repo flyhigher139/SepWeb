@@ -7,14 +7,14 @@ type StringValue struct {
 	err error
 }
 
-func (s *StringValue) ToString() (string, error) {
+func (s StringValue) ToString() (string, error) {
 	if s.err != nil {
 		return "", s.err
 	}
 	return s.val, nil
 }
 
-func (s *StringValue) ToInt64() (int64, error) {
+func (s StringValue) ToInt64() (int64, error) {
 	if s.err != nil {
 		return 0, s.err
 	}
