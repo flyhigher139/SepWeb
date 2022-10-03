@@ -3,7 +3,9 @@ module github.com/igevin/sepweb
 go 1.18
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.8.0
 )
 

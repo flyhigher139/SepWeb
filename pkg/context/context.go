@@ -17,6 +17,7 @@ type Context struct {
 	PathParams       map[string]string
 	cacheQueryValues url.Values
 	TplEngine        template.TemplateEngine
+	UserValues       map[string]any
 }
 
 func (c *Context) BindJson(val any) error {
